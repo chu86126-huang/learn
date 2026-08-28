@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>趣遊數學｜一起玩數學，發現數字的秘密！</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+:root{
+  --paper:#fff8e9;
+  --paper2:#fff2d5;
+  --orange:#e9824b;
+  --coral:#e76f61;
+  --yellow:#f6c85f;
+  --brown:#65483b;
+  --green:#91a878;
+  --blue:#7da7a9;
+  --ink:#5a4036;
+  --white:#fffdf7;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(246,200,95,.15) 0 3px, transparent 4px),
+    radial-gradient(circle at 90% 30%, rgba(231,111,97,.10) 0 2px, transparent 3px),
+    var(--paper);
+  background-size:34px 34px,46px 46px,auto;
+  overflow-x:hidden;
+}
+h1,h2,h3,.logo,.hand{
+  font-family:"Baloo 2","Noto Sans TC",sans-serif;
+}
+a{text-decoration:none;color:inherit}
+
+/* ---------- 小手繪裝飾 ---------- */
+.doodle{
+  position:absolute;
+  pointer-events:none;
+  user-select:none;
+  opacity:.75;
+}
+.star{
+  font-size:28px;
+  animation:float 4s ease-in-out infinite;
+}
+.star.s2{animation-delay:1s}
+.star.s3{animation-delay:2s}
+@keyframes float{
+  0%,100%{transform:translateY(0) rotate(-5deg)}
+  50%{transform:translateY(-10px) rotate(8deg)}
+}
+
+.line{
+  width:80px;height:18px;
+  border-top:3px solid var(--yellow);
+  border-radius:50%;
+  transform:rotate(-8deg);
+}
+
+/* ---------- 導覽 ---------- */
+nav{
+  position:fixed;
+  z-index:100;
+  top:14px;left:50%;
+  transform:translateX(-50%);
+  width:min(1100px,92%);
+  padding:10px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:rgba(255,253,247,.9);
+  border:2px solid rgba(101,72,59,.16);
+  border-radius:24px;
+  box-shadow:4px 5px 0 rgba(101,72,59,.08);
+  backdrop-filter:blur(10px);
+}
+.logo{
+  font-size:25px;
+  font-weight:800;
+  color:var(--orange);
+  letter-spacing:1px;
+}
+.logo span{display:inline-block;transform:rotate(-4deg)}
+.nav-links{
+  display:flex;gap:7px;
+}
+.nav-links a{
+  padding:8px 13px;
+  font-size:14px;
+  font-weight:700;
+  border-radius:15px;
+  transition:.2s;
+}
+.nav-links a:hover{
+  background:var(--paper2);
+  transform:rotate(-2deg);
+}
+
+/* ---------- 共用 ---------- */
+section{
+  position:relative;
+  width:min(1120px,92%);
+  margin:auto;
+  padding:90px 0;
+}
+.section-title{text-align:center;margin-bottom:45px}
+.section-title .mini{
+  display:inline-block;
+  padding:5px 14px;
+  background:var(--yellow);
+  border-radius:14px 11px 15px 10px;
+  font-weight:900;
+  font-size:13px;
+  transform:rotate(-2deg);
+}
+.section-title h2{
+  margin:10px 0 5px;
+  font-size:clamp(32px,5vw,48px);
+  line-height:1;
+}
+.section-title p{margin:0;color:#8b6c5c}
+
+/* ---------- Hero ---------- */
+.hero{
+  min-height:760px;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:150px 20px 90px;
+  overflow:hidden;
+}
+.hero-inner{max-width:900px;position:relative;z-index:2}
+.hero-kicker{
+  display:inline-block;
+  background:var(--white);
+  border:2px solid var(--brown);
+  padding:8px 18px;
+  border-radius:18px 14px 20px 12px;
+  font-size:14px;
+  font-weight:700;
+  transform:rotate(-2deg);
+  box-shadow:3px 4px 0 rgba(101,72,59,.12);
+}
+.hero h1{
+  margin:22px 0 8px;
+  font-size:clamp(65px,12vw,120px);
+  line-height:.82;
+  letter-spacing:2px;
+  color:var(--orange);
+  text-shadow:3px 4px 0 #f6c85f;
+}
+.hero h1 .small{
+  display:block;
+  font-size:.28em;
+  color:var(--brown);
+  text-shadow:none;
+  letter-spacing:4px;
+  margin-bottom:14px;
+}
+.hero-sub{
+  font-size:clamp(17px,2.3vw,23px);
+  font-weight:700;
+  margin:22px auto 30px;
+  max-width:650px;
+}
+.cta{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  background:var(--coral);
+  color:white;
+  padding:15px 27px;
+  border-radius:19px 15px 21px 14px;
+  font-weight:900;
+  border:3px solid var(--brown);
+  box-shadow:5px 6px 0 var(--brown);
+  transition:.2s;
+}
+.cta:hover{
+  transform:translate(2px,2px) rotate(-1deg);
+  box-shadow:3px 4px 0 var(--brown);
+}
+.hero-equations{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  color:rgba(101,72,59,.23);
+  font-family:"Baloo 2",sans-serif;
+  font-weight:700;
+}
+.eq{position:absolute;font-size:34px;transform:rotate(-10deg)}
+.eq:nth-child(1){left:8%;top:30%}
+.eq:nth-child(2){right:8%;top:25%;transform:rotate(8deg)}
+.eq:nth-child(3){left:15%;bottom:22%;transform:rotate(5deg)}
+.eq:nth-child(4){right:15%;bottom:19%;transform:rotate(-7deg)}
+.tape{
+  position:absolute;
+  width:100px;height:28px;
+  background:rgba(246,200,95,.58);
+  transform:rotate(-13deg);
+  z-index:3;
+}
+.tape.one{top:120px;left:11%}
+.tape.two{top:165px;right:12%;transform:rotate(16deg)}
+
+/* ---------- 任務 ---------- */
+.tasks{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:25px;
+}
+.card{
+  position:relative;
+  padding:30px 25px 28px;
+  background:var(--white);
+  border:2px solid rgba(101,72,59,.28);
+  border-radius:25px 19px 28px 20px;
+  box-shadow:5px 6px 0 rgba(101,72,59,.10);
+  transition:.25s;
+}
+.card:nth-child(2){transform:rotate(1.2deg)}
+.card:nth-child(3){transform:rotate(-1deg)}
+.card:hover{
+  transform:translateY(-8px) rotate(0deg);
+  box-shadow:7px 10px 0 rgba(101,72,59,.12);
+}
+.card-icon{
+  width:70px;height:70px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  font-size:37px;
+  margin-bottom:18px;
+  border:2px dashed var(--brown);
+}
+.card:nth-child(1) .card-icon{background:#ffe39a}
+.card:nth-child(2) .card-icon{background:#f7b7a7}
+.card:nth-child(3) .card-icon{background:#c8d6b8}
+.card h3{font-size:25px;margin:0 0 9px}
+.card p{font-size:15px;line-height:1.8;margin:0 0 17px;color:#806457}
+.tag{
+  display:inline-block;
+  font-size:12px;
+  font-weight:800;
+  padding:5px 10px;
+  background:var(--paper2);
+  border-radius:10px;
+}
+
+/* ---------- 地圖 ---------- */
+.map-wrap{
+  position:relative;
+  min-height:430px;
+  background:#f4e6c9;
+  border:3px solid var(--brown);
+  border-radius:35px 27px 38px 29px;
+  overflow:hidden;
+  box-shadow:7px 8px 0 rgba(101,72,59,.13);
+}
+.map-wrap:before{
+  content:"";
+  position:absolute;
+  inset:18px;
+  border:2px dashed rgba(101,72,59,.25);
+  border-radius:28px;
+}
+.map-path{
+  position:absolute;
+  left:14%;right:14%;top:53%;
+  height:90px;
+  border-top:7px dashed #d4976e;
+  border-radius:50%;
+  transform:rotate(-4deg);
+}
+.place{
+  position:absolute;
+  z-index:2;
+  width:145px;
+  text-align:center;
+  cursor:pointer;
+  transition:.2s;
+}
+.place:hover{transform:scale(1.08) rotate(-2deg)}
+.place .bubble{
+  width:95px;height:95px;
+  margin:auto;
+  display:grid;place-items:center;
+  background:var(--white);
+  border:3px solid var(--brown);
+  border-radius:50%;
+  font-size:45px;
+  box-shadow:4px 5px 0 rgba(101,72,59,.15);
+}
+.place h3{margin:10px 0 3px;font-size:21px}
+.place p{font-size:12px;margin:0;font-weight:700}
+.p1{left:8%;top:25%}
+.p2{left:42%;top:16%}
+.p3{right:8%;top:28%}
+.map-sign{
+  position:absolute;
+  left:50%;bottom:35px;
+  transform:translateX(-50%) rotate(-2deg);
+  background:#fffdf7;
+  border:2px solid var(--brown);
+  padding:9px 20px;
+  border-radius:8px;
+  font-weight:900;
+  box-shadow:3px 4px 0 rgba(101,72,59,.15);
+}
+
+/* ---------- 生活數學 ---------- */
+.life{
+  display:grid;
+  grid-template-columns:1fr 1.2fr;
+  gap:55px;
+  align-items:center;
+}
+.notebook{
+  background:#fffdf7;
+  padding:30px;
+  border:2px solid rgba(101,72,59,.25);
+  border-radius:10px 25px 13px 20px;
+  box-shadow:6px 7px 0 rgba(101,72,59,.1);
+  transform:rotate(-1.5deg);
+  background-image:repeating-linear-gradient(
+    to bottom, transparent 0 34px, rgba(125,167,169,.22) 35px 36px
+  );
+}
+.notebook h3{
+  font-size:29px;
+  margin:0 0 20px;
+}
+.notebook p{line-height:2;margin:0;font-size:15px}
+.examples{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:17px;
+}
+.example{
+  padding:21px 18px;
+  background:var(--white);
+  border-radius:20px 15px 21px 14px;
+  border:2px solid rgba(101,72,59,.2);
+  box-shadow:3px 4px 0 rgba(101,72,59,.08);
+  transition:.2s;
+}
+.example:hover{transform:translateY(-4px) rotate(1deg)}
+.example .emoji{font-size:36px}
+.example h4{margin:7px 0 4px;font-size:18px}
+.example p{font-size:13px;color:#876b5d;margin:0;line-height:1.6}
+
+/* ---------- 結尾 ---------- */
+.end{
+  text-align:center;
+  padding:90px 20px 110px;
+}
+.end .big-star{font-size:45px}
+.end h2{
+  font-size:clamp(35px,6vw,58px);
+  margin:10px 0;
+  color:var(--orange);
+}
+.end p{font-weight:700;color:#806457}
+footer{
+  text-align:center;
+  padding:24px;
+  font-size:12px;
+  color:#967a6a;
+  border-top:2px dashed rgba(101,72,59,.18);
+}
+
+/* ---------- 彈出提示 ---------- */
+.toast{
+  position:fixed;
+  z-index:200;
+  left:50%;
+  bottom:25px;
+  transform:translate(-50%,30px);
+  opacity:0;
+  pointer-events:none;
+  background:var(--brown);
+  color:white;
+  padding:13px 20px;
+  border-radius:16px;
+  font-size:14px;
+  font-weight:700;
+  box-shadow:4px 5px 0 rgba(101,72,59,.2);
+  transition:.3s;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- RWD ---------- */
+@media(max-width:800px){
+  nav{padding:9px 12px}
+  .nav-links a{font-size:12px;padding:7px 8px}
+  .logo{font-size:20px}
+  .hero{min-height:700px}
+  .tasks{grid-template-columns:1fr}
+  .card:nth-child(2),.card:nth-child(3){transform:none}
+  .map-wrap{min-height:580px}
+  .map-path{
+    left:49%;right:auto;top:23%;
+    width:7px;height:390px;
+    border-top:0;border-left:7px dashed #d4976e;
+    transform:rotate(3deg);
+  }
+  .p1{left:50%;top:10%;transform:translateX(-50%)}
+  .p2{left:50%;top:38%;transform:translateX(-50%)}
+  .p3{right:auto;left:50%;top:66%;transform:translateX(-50%)}
+  .life{grid-template-columns:1fr;gap:35px}
+}
+@media(max-width:520px){
+  nav{top:8px}
+  .nav-links{display:none}
+  .hero{padding-top:120px}
+  .hero h1{font-size:72px}
+  .eq{font-size:25px}
+  section{padding:65px 0}
+  .examples{grid-template-columns:1fr}
+  .tape{display:none}
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <a href="#top" class="logo"><span>✏️ 趣遊數學</span></a>
+  <div class="nav-links">
+    <a href="#tasks">數學任務</a>
+    <a href="#map">冒險地圖</a>
+    <a href="#life">生活數學</a>
+  </div>
+</nav>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="tape one"></div>
+    <div class="tape two"></div>
+
+    <div class="hero-equations" aria-hidden="true">
+      <div class="eq">x² + 3x = ?</div>
+      <div class="eq">△ ABC</div>
+      <div class="eq">π ≈ 3.14</div>
+      <div class="eq">1, 2, 3, …</div>
+    </div>
+
+    <div class="doodle star s1" style="left:19%;top:19%">✦</div>
+    <div class="doodle star s2" style="right:19%;top:37%">✧</div>
+    <div class="doodle star s3" style="left:28%;bottom:17%">✦</div>
+
+    <div class="hero-inner">
+      <div class="hero-kicker">📒 打開你的數學冒險筆記</div>
+      <h1>
+        <span class="small">WELCOME TO</span>
+        趣遊數學
+      </h1>
+      <p class="hero-sub">
+        數學不只是算答案，<br>
+        更是一場充滿驚喜的探索！
+      </p>
+      <a href="#tasks" class="cta">🚀 開始數學冒險</a>
+    </div>
+  </section>
+
+  <!-- TASKS -->
+  <section id="tasks">
+    <div class="section-title">
+      <span class="mini">TODAY'S MISSION</span>
+      <h2>🎒 今日數學任務</h2>
+      <p>選一個你最想挑戰的任務吧！</p>
+    </div>
+
+    <div class="tasks">
+      <article class="card">
+        <div class="card-icon">🔢</div>
+        <h3>數字小偵探</h3>
+        <p>數字裡藏著什麼秘密？尋找規律、破解線索，成為數字偵探！</p>
+        <span class="tag">規律 × 邏輯</span>
+      </article>
+
+      <article class="card">
+        <div class="card-icon">📐</div>
+        <h3>圖形冒險家</h3>
+        <p>拿起尺和圓規，探索角度、面積與圖形之間有趣的關係。</p>
+        <span class="tag">幾何 × 空間</span>
+      </article>
+
+      <article class="card">
+        <div class="card-icon">🧩</div>
+        <h3>數學解謎王</h3>
+        <p>動動腦、找線索、破關卡！每一道題都是一個等待破解的謎題。</p>
+        <span class="tag">推理 × 挑戰</span>
+      </article>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section id="map">
+    <div class="section-title">
+      <span class="mini">ADVENTURE MAP</span>
+      <h2>🗺️ 數學冒險地圖</h2>
+      <p>選擇一個地方，開始你的數學旅程！</p>
+    </div>
+
+    <div class="map-wrap">
+      <div class="map-path"></div>
+
+      <div class="place p1" data-message="🔢 歡迎來到數字村！今天要尋找神秘的數字規律。">
+        <div class="bubble">🏠</div>
+        <h3>數字村</h3>
+        <p>規律正在等你發現</p>
+      </div>
+
+      <div class="place p2" data-message="📐 歡迎來到幾何島！拿起你的尺，探索圖形的秘密吧！">
+        <div class="bubble">🏝️</div>
+        <h3>幾何島</h3>
+        <p>形狀也會說故事</p>
+      </div>
+
+      <div class="place p3" data-message="📈 函數城有新任務！準備好讓 x 和 y 一起冒險了嗎？">
+        <div class="bubble">🏰</div>
+        <h3>函數城</h3>
+        <p>x 與 y 的奇妙世界</p>
+      </div>
+
+      <div class="map-sign">📌 你今天想去哪裡？</div>
+    </div>
+  </section>
+
+  <!-- LIFE MATH -->
+  <section id="life">
+    <div class="section-title">
+      <span class="mini">MATH IN LIFE</span>
+      <h2>💡 數學就在生活裡</h2>
+      <p>原來我們每天都在偷偷使用數學！</p>
+    </div>
+
+    <div class="life">
+      <div class="notebook">
+        <h3>✍️ 數學觀察日記</h3>
+        <p>
+          「今天，我發現數學比想像中更有趣。」<br>
+          吃披薩時會用到分數，買東西時會計算折扣，
+          打籃球時會觀察角度，搭公車時會估算時間……
+          <br><br>
+          數學其實一直都在我們身邊。
+          <strong>只要開始觀察，就會發現好多有趣的數學！</strong>
+        </p>
+      </div>
+
+      <div class="examples">
+        <div class="example">
+          <div class="emoji">🍕</div>
+          <h4>分披薩</h4>
+          <p>分數、比例與圓形，通通出現了！</p>
+        </div>
+        <div class="example">
+          <div class="emoji">🛒</div>
+          <h4>買東西</h4>
+          <p>折扣、百分比與心算大挑戰。</p>
+        </div>
+        <div class="example">
+          <div class="emoji">🏀</div>
+          <h4>投籃</h4>
+          <p>角度、距離與拋物線的數學。</p>
+        </div>
+        <div class="example">
+          <div class="emoji">🚌</div>
+          <h4>搭公車</h4>
+          <p>時間、速度與路程就在眼前。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section class="end">
+    <div class="big-star">⭐</div>
+    <h2>準備好玩數學了嗎？</h2>
+    <p>不要害怕數學，先玩玩看，再慢慢發現它的秘密！</p>
+    <a href="#tasks" class="cta">🎒 再玩一次</a>
+  </section>
+
+</main>
+
+<footer>
+  ✏️ 趣遊數學 · 用好奇心，打開數學的另一扇門
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const toast = document.getElementById("toast");
+let toastTimer;
+
+document.querySelectorAll(".place").forEach(place => {
+  place.addEventListener("click", () => {
+    toast.textContent = place.dataset.message;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
+  });
+});
+
+// 讓按鈕點擊時有一點手繪感的回饋
+document.querySelectorAll(".cta").forEach(btn => {
+  btn.addEventListener("click", () => {
+    btn.animate(
+      [
+        { transform:"scale(1)" },
+        { transform:"scale(.95) rotate(-2deg)" },
+        { transform:"scale(1) rotate(0deg)" }
+      ],
+      { duration:260, easing:"ease-out" }
+    );
+  });
+});
+</script>
+
+</body>
+</html>
