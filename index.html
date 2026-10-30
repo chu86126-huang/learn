@@ -1,631 +1,741 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>趣遊數學｜一起玩數學，發現數字的秘密！</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>因陀羅網影響力實驗室 - 雙機連線版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        body {
+            background-color: #030712;
+            color: #e2e8f0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+        
+        /* 遊戲大廳 (Lobby) */
+        #lobby-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px);
+            z-index: 100; display: flex; justify-content: center; align-items: center; padding: 16px;
+        }
+        .lobby-box {
+            background: #0f172a; border: 2px solid #38bdf8; border-radius: 18px;
+            width: 860px; max-width: 96vw; max-height: 94vh; display: flex; overflow: hidden;
+            box-shadow: 0 25px 60px rgba(56, 189, 248, 0.25);
+        }
+        .lobby-left {
+            flex: 1.2; background: #1e293b; padding: 36px 30px; border-right: 2px solid #334155;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .lobby-right {
+            flex: 1; padding: 36px 30px; display: flex; flex-direction: column; justify-content: center;
+        }
+        .lobby-title { font-size: 26px; font-weight: 900; color: #fbbf24; text-shadow: 2px 2px 0px #b45309; margin-bottom: 16px; }
+        .lobby-rules { list-style: none; color: #cbd5e1; font-size: 14.5px; line-height: 1.6; }
+        .lobby-rules li { margin-bottom: 10px; padding-left: 24px; position: relative; }
+        .lobby-rules li::before { content: '✨'; position: absolute; left: 0; top: 0; font-size: 13px; }
+        
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 15px; color: #38bdf8; }
+        .input-group select, .input-group input {
+            width: 100%; padding: 14px 16px; border-radius: 10px; border: 2px solid #334155;
+            background: #020617; color: #f8fafc; font-size: 17px; outline: none; transition: all 0.2s; font-weight: bold;
+        }
+        .input-group select:focus, .input-group input:focus { border-color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.35); }
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        .btn-start {
+            width: 100%; padding: 16px; font-size: 18px; font-weight: bold; color: #0f172a;
+            background: #fbbf24; border: none; border-radius: 10px; cursor: pointer; margin-top: 6px; transition: all 0.2s;
+        }
+        .btn-start:active { background: #f59e0b; transform: scale(0.98); }
+        .btn-reset-group {
+            background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 8px; font-size: 13px;
+            border-radius: 6px; margin-top: 10px; cursor: pointer; width: 100%;
+        }
 
-:root{
-  --paper:#fff8e9;
-  --paper2:#fff2d5;
-  --orange:#e9824b;
-  --coral:#e76f61;
-  --yellow:#f6c85f;
-  --brown:#65483b;
-  --green:#91a878;
-  --blue:#7da7a9;
-  --ink:#5a4036;
-  --white:#fffdf7;
-}
+        /* 等待隊友畫面 */
+        #waiting-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.9); backdrop-filter: blur(8px);
+            z-index: 90; display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid #334155; border-top: 5px solid #38bdf8;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  color:var(--ink);
-  font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
-  background:
-    radial-gradient(circle at 10% 10%, rgba(246,200,95,.15) 0 3px, transparent 4px),
-    radial-gradient(circle at 90% 30%, rgba(231,111,97,.10) 0 2px, transparent 3px),
-    var(--paper);
-  background-size:34px 34px,46px 46px,auto;
-  overflow-x:hidden;
-}
-h1,h2,h3,.logo,.hand{
-  font-family:"Baloo 2","Noto Sans TC",sans-serif;
-}
-a{text-decoration:none;color:inherit}
+        /* 平板主版面 */
+        #app-container {
+            width: 100vw; height: 100vh; height: 100dvh;
+            display: grid; grid-template-columns: 1.1fr 1fr;
+            gap: 12px; padding: 12px; background: #0b1329;
+        }
 
-/* ---------- 小手繪裝飾 ---------- */
-.doodle{
-  position:absolute;
-  pointer-events:none;
-  user-select:none;
-  opacity:.75;
-}
-.star{
-  font-size:28px;
-  animation:float 4s ease-in-out infinite;
-}
-.star.s2{animation-delay:1s}
-.star.s3{animation-delay:2s}
-@keyframes float{
-  0%,100%{transform:translateY(0) rotate(-5deg)}
-  50%{transform:translateY(-10px) rotate(8deg)}
-}
+        /* 左側網絡 */
+        #left-stage {
+            display: flex; flex-direction: column; align-items: center; position: relative;
+            background: #020617; border: 2px solid #334155; border-radius: 14px; padding: 12px; overflow: hidden;
+        }
+        .stage-header { display: flex; justify-content: space-between; align-items: center; width: 100%; padding-bottom: 8px; border-bottom: 1px solid #1e293b; }
+        .title { font-size: 22px; font-weight: 900; color: #fbbf24; text-shadow: 2px 2px 0px #b45309; }
+        .hud-stats { display: flex; gap: 8px; }
+        .badge { font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; }
+        .badge-round { background: rgba(34, 211, 238, 0.15); border: 1px solid #22d3ee; color: #22d3ee; }
+        .badge-match { background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24; }
+        
+        #network-canvas { width: 100%; flex-grow: 1; background: radial-gradient(circle at center, #0b1329 0%, #020617 100%); border-radius: 10px; margin-top: 8px; }
+        
+        .stage-message {
+            position: absolute; bottom: 14px; font-size: 14.5px; font-weight: bold; color: #fff; background: rgba(15, 23, 42, 0.95);
+            padding: 8px 18px; border-radius: 8px; border: 2px dashed #fbbf24; pointer-events: none; transition: all 0.3s; z-index: 10;
+            text-align: center; max-width: 94%;
+        }
 
-.line{
-  width:80px;height:18px;
-  border-top:3px solid var(--yellow);
-  border-radius:50%;
-  transform:rotate(-8deg);
-}
+        /* 右側觸控控制台 */
+        #right-panel { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 2px; }
+        .panel-box { background: #1e293b; border: 2px solid #475569; border-radius: 14px; padding: 16px; }
+        
+        /* 角色指示橫幅 */
+        .protagonist-banner {
+            text-align: center; padding: 12px; font-size: 18px; font-weight: 900; border-radius: 10px;
+            margin-bottom: 12px; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .banner-me-protagonist { background: linear-gradient(135deg, #0284c7, #38bdf8); border: 2px solid #7dd3fc; }
+        .banner-me-predictor { background: linear-gradient(135deg, #be185d, #f472b6); border: 2px solid #fbcfe8; }
 
-/* ---------- 導覽 ---------- */
-nav{
-  position:fixed;
-  z-index:100;
-  top:14px;left:50%;
-  transform:translateX(-50%);
-  width:min(1100px,92%);
-  padding:10px 18px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:rgba(255,253,247,.9);
-  border:2px solid rgba(101,72,59,.16);
-  border-radius:24px;
-  box-shadow:4px 5px 0 rgba(101,72,59,.08);
-  backdrop-filter:blur(10px);
-}
-.logo{
-  font-size:25px;
-  font-weight:800;
-  color:var(--orange);
-  letter-spacing:1px;
-}
-.logo span{display:inline-block;transform:rotate(-4deg)}
-.nav-links{
-  display:flex;gap:7px;
-}
-.nav-links a{
-  padding:8px 13px;
-  font-size:14px;
-  font-weight:700;
-  border-radius:15px;
-  transition:.2s;
-}
-.nav-links a:hover{
-  background:var(--paper2);
-  transform:rotate(-2deg);
-}
+        .partner-status-tag {
+            display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold;
+            background: #0f172a; border: 1px solid #334155; margin-bottom: 10px; color: #94a3b8;
+        }
+        .partner-status-tag.ready { color: #4ade80; border-color: #22c55e; }
 
-/* ---------- 共用 ---------- */
-section{
-  position:relative;
-  width:min(1120px,92%);
-  margin:auto;
-  padding:90px 0;
-}
-.section-title{text-align:center;margin-bottom:45px}
-.section-title .mini{
-  display:inline-block;
-  padding:5px 14px;
-  background:var(--yellow);
-  border-radius:14px 11px 15px 10px;
-  font-weight:900;
-  font-size:13px;
-  transform:rotate(-2deg);
-}
-.section-title h2{
-  margin:10px 0 5px;
-  font-size:clamp(32px,5vw,48px);
-  line-height:1;
-}
-.section-title p{margin:0;color:#8b6c5c}
+        .q-category { font-size: 13px; color: #fbbf24; font-weight: bold; margin-bottom: 4px; }
+        .question-text { font-size: 16px; line-height: 1.5; color: #f8fafc; margin-bottom: 14px; font-weight: 700; }
 
-/* ---------- Hero ---------- */
-.hero{
-  min-height:760px;
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:150px 20px 90px;
-  overflow:hidden;
-}
-.hero-inner{max-width:900px;position:relative;z-index:2}
-.hero-kicker{
-  display:inline-block;
-  background:var(--white);
-  border:2px solid var(--brown);
-  padding:8px 18px;
-  border-radius:18px 14px 20px 12px;
-  font-size:14px;
-  font-weight:700;
-  transform:rotate(-2deg);
-  box-shadow:3px 4px 0 rgba(101,72,59,.12);
-}
-.hero h1{
-  margin:22px 0 8px;
-  font-size:clamp(65px,12vw,120px);
-  line-height:.82;
-  letter-spacing:2px;
-  color:var(--orange);
-  text-shadow:3px 4px 0 #f6c85f;
-}
-.hero h1 .small{
-  display:block;
-  font-size:.28em;
-  color:var(--brown);
-  text-shadow:none;
-  letter-spacing:4px;
-  margin-bottom:14px;
-}
-.hero-sub{
-  font-size:clamp(17px,2.3vw,23px);
-  font-weight:700;
-  margin:22px auto 30px;
-  max-width:650px;
-}
-.cta{
-  display:inline-flex;
-  align-items:center;
-  gap:9px;
-  background:var(--coral);
-  color:white;
-  padding:15px 27px;
-  border-radius:19px 15px 21px 14px;
-  font-weight:900;
-  border:3px solid var(--brown);
-  box-shadow:5px 6px 0 var(--brown);
-  transition:.2s;
-}
-.cta:hover{
-  transform:translate(2px,2px) rotate(-1deg);
-  box-shadow:3px 4px 0 var(--brown);
-}
-.hero-equations{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  color:rgba(101,72,59,.23);
-  font-family:"Baloo 2",sans-serif;
-  font-weight:700;
-}
-.eq{position:absolute;font-size:34px;transform:rotate(-10deg)}
-.eq:nth-child(1){left:8%;top:30%}
-.eq:nth-child(2){right:8%;top:25%;transform:rotate(8deg)}
-.eq:nth-child(3){left:15%;bottom:22%;transform:rotate(5deg)}
-.eq:nth-child(4){right:15%;bottom:19%;transform:rotate(-7deg)}
-.tape{
-  position:absolute;
-  width:100px;height:28px;
-  background:rgba(246,200,95,.58);
-  transform:rotate(-13deg);
-  z-index:3;
-}
-.tape.one{top:120px;left:11%}
-.tape.two{top:165px;right:12%;transform:rotate(16deg)}
+        /* 單人專用 3 選項按鈕區 */
+        .choice-container { display: flex; flex-direction: column; gap: 10px; }
+        .btn-choice {
+            padding: 14px 14px; font-size: 15px; line-height: 1.45; font-weight: 600; color: #f1f5f9;
+            background: #0f172a; border: 2px solid #475569; border-radius: 10px; cursor: pointer; transition: all 0.15s; text-align: left;
+            min-height: 64px; display: flex; align-items: center;
+        }
+        .btn-choice:active:not(:disabled) { transform: scale(0.98); background: #334155; }
+        .btn-choice.selected-locked {
+            background: #047857 !important; border-color: #10b981 !important; color: #fff !important; font-weight: bold;
+        }
+        .btn-choice:disabled:not(.selected-locked) { opacity: 0.35; cursor: not-allowed; }
 
-/* ---------- 任務 ---------- */
-.tasks{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:25px;
-}
-.card{
-  position:relative;
-  padding:30px 25px 28px;
-  background:var(--white);
-  border:2px solid rgba(101,72,59,.28);
-  border-radius:25px 19px 28px 20px;
-  box-shadow:5px 6px 0 rgba(101,72,59,.10);
-  transition:.25s;
-}
-.card:nth-child(2){transform:rotate(1.2deg)}
-.card:nth-child(3){transform:rotate(-1deg)}
-.card:hover{
-  transform:translateY(-8px) rotate(0deg);
-  box-shadow:7px 10px 0 rgba(101,72,59,.12);
-}
-.card-icon{
-  width:70px;height:70px;
-  display:grid;place-items:center;
-  border-radius:50%;
-  font-size:37px;
-  margin-bottom:18px;
-  border:2px dashed var(--brown);
-}
-.card:nth-child(1) .card-icon{background:#ffe39a}
-.card:nth-child(2) .card-icon{background:#f7b7a7}
-.card:nth-child(3) .card-icon{background:#c8d6b8}
-.card h3{font-size:25px;margin:0 0 9px}
-.card p{font-size:15px;line-height:1.8;margin:0 0 17px;color:#806457}
-.tag{
-  display:inline-block;
-  font-size:12px;
-  font-weight:800;
-  padding:5px 10px;
-  background:var(--paper2);
-  border-radius:10px;
-}
+        /* 揭曉面板 */
+        #reveal-box {
+            display: none; background: #111827; border: 2px solid #fbbf24; border-radius: 10px; padding: 14px; margin-top: 10px; text-align: center;
+        }
+        .collision-title { font-size: 18px; font-weight: 900; margin-bottom: 6px; }
+        .collision-desc { font-size: 14px; line-height: 1.55; color: #cbd5e1; margin-bottom: 12px; }
+        .btn-next {
+            width: 100%; padding: 14px; font-size: 17px; font-weight: bold; background: #fbbf24; color: #0f172a;
+            border: none; border-radius: 8px; cursor: pointer;
+        }
 
-/* ---------- 地圖 ---------- */
-.map-wrap{
-  position:relative;
-  min-height:430px;
-  background:#f4e6c9;
-  border:3px solid var(--brown);
-  border-radius:35px 27px 38px 29px;
-  overflow:hidden;
-  box-shadow:7px 8px 0 rgba(101,72,59,.13);
-}
-.map-wrap:before{
-  content:"";
-  position:absolute;
-  inset:18px;
-  border:2px dashed rgba(101,72,59,.25);
-  border-radius:28px;
-}
-.map-path{
-  position:absolute;
-  left:14%;right:14%;top:53%;
-  height:90px;
-  border-top:7px dashed #d4976e;
-  border-radius:50%;
-  transform:rotate(-4deg);
-}
-.place{
-  position:absolute;
-  z-index:2;
-  width:145px;
-  text-align:center;
-  cursor:pointer;
-  transition:.2s;
-}
-.place:hover{transform:scale(1.08) rotate(-2deg)}
-.place .bubble{
-  width:95px;height:95px;
-  margin:auto;
-  display:grid;place-items:center;
-  background:var(--white);
-  border:3px solid var(--brown);
-  border-radius:50%;
-  font-size:45px;
-  box-shadow:4px 5px 0 rgba(101,72,59,.15);
-}
-.place h3{margin:10px 0 3px;font-size:21px}
-.place p{font-size:12px;margin:0;font-weight:700}
-.p1{left:8%;top:25%}
-.p2{left:42%;top:16%}
-.p3{right:8%;top:28%}
-.map-sign{
-  position:absolute;
-  left:50%;bottom:35px;
-  transform:translateX(-50%) rotate(-2deg);
-  background:#fffdf7;
-  border:2px solid var(--brown);
-  padding:9px 20px;
-  border-radius:8px;
-  font-weight:900;
-  box-shadow:3px 4px 0 rgba(101,72,59,.15);
-}
-
-/* ---------- 生活數學 ---------- */
-.life{
-  display:grid;
-  grid-template-columns:1fr 1.2fr;
-  gap:55px;
-  align-items:center;
-}
-.notebook{
-  background:#fffdf7;
-  padding:30px;
-  border:2px solid rgba(101,72,59,.25);
-  border-radius:10px 25px 13px 20px;
-  box-shadow:6px 7px 0 rgba(101,72,59,.1);
-  transform:rotate(-1.5deg);
-  background-image:repeating-linear-gradient(
-    to bottom, transparent 0 34px, rgba(125,167,169,.22) 35px 36px
-  );
-}
-.notebook h3{
-  font-size:29px;
-  margin:0 0 20px;
-}
-.notebook p{line-height:2;margin:0;font-size:15px}
-.examples{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:17px;
-}
-.example{
-  padding:21px 18px;
-  background:var(--white);
-  border-radius:20px 15px 21px 14px;
-  border:2px solid rgba(101,72,59,.2);
-  box-shadow:3px 4px 0 rgba(101,72,59,.08);
-  transition:.2s;
-}
-.example:hover{transform:translateY(-4px) rotate(1deg)}
-.example .emoji{font-size:36px}
-.example h4{margin:7px 0 4px;font-size:18px}
-.example p{font-size:13px;color:#876b5d;margin:0;line-height:1.6}
-
-/* ---------- 結尾 ---------- */
-.end{
-  text-align:center;
-  padding:90px 20px 110px;
-}
-.end .big-star{font-size:45px}
-.end h2{
-  font-size:clamp(35px,6vw,58px);
-  margin:10px 0;
-  color:var(--orange);
-}
-.end p{font-weight:700;color:#806457}
-footer{
-  text-align:center;
-  padding:24px;
-  font-size:12px;
-  color:#967a6a;
-  border-top:2px dashed rgba(101,72,59,.18);
-}
-
-/* ---------- 彈出提示 ---------- */
-.toast{
-  position:fixed;
-  z-index:200;
-  left:50%;
-  bottom:25px;
-  transform:translate(-50%,30px);
-  opacity:0;
-  pointer-events:none;
-  background:var(--brown);
-  color:white;
-  padding:13px 20px;
-  border-radius:16px;
-  font-size:14px;
-  font-weight:700;
-  box-shadow:4px 5px 0 rgba(101,72,59,.2);
-  transition:.3s;
-}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-
-/* ---------- RWD ---------- */
-@media(max-width:800px){
-  nav{padding:9px 12px}
-  .nav-links a{font-size:12px;padding:7px 8px}
-  .logo{font-size:20px}
-  .hero{min-height:700px}
-  .tasks{grid-template-columns:1fr}
-  .card:nth-child(2),.card:nth-child(3){transform:none}
-  .map-wrap{min-height:580px}
-  .map-path{
-    left:49%;right:auto;top:23%;
-    width:7px;height:390px;
-    border-top:0;border-left:7px dashed #d4976e;
-    transform:rotate(3deg);
-  }
-  .p1{left:50%;top:10%;transform:translateX(-50%)}
-  .p2{left:50%;top:38%;transform:translateX(-50%)}
-  .p3{right:auto;left:50%;top:66%;transform:translateX(-50%)}
-  .life{grid-template-columns:1fr;gap:35px}
-}
-@media(max-width:520px){
-  nav{top:8px}
-  .nav-links{display:none}
-  .hero{padding-top:120px}
-  .hero h1{font-size:72px}
-  .eq{font-size:25px}
-  section{padding:65px 0}
-  .examples{grid-template-columns:1fr}
-  .tape{display:none}
-}
-</style>
+        /* 診斷書 */
+        #diagnosis-box { display: none; text-align: center; border-color: #38bdf8; }
+        .diag-title { font-size: 24px; font-weight: 900; margin-bottom: 6px; }
+        .diag-subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 12px; font-weight: bold; }
+        .diag-card {
+            background: #0b1329; border: 2px dashed #fbbf24; border-radius: 12px; padding: 16px; margin: 12px 0; text-align: left; line-height: 1.7; font-size: 14.5px;
+        }
+        .diag-score { display: flex; justify-content: space-around; margin-bottom: 10px; font-size: 15px; font-weight: bold; }
+    </style>
 </head>
-
 <body>
 
-<nav>
-  <a href="#top" class="logo"><span>✏️ 趣遊數學</span></a>
-  <div class="nav-links">
-    <a href="#tasks">數學任務</a>
-    <a href="#map">冒險地圖</a>
-    <a href="#life">生活數學</a>
-  </div>
-</nav>
-
-<main id="top">
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="tape one"></div>
-    <div class="tape two"></div>
-
-    <div class="hero-equations" aria-hidden="true">
-      <div class="eq">x² + 3x = ?</div>
-      <div class="eq">△ ABC</div>
-      <div class="eq">π ≈ 3.14</div>
-      <div class="eq">1, 2, 3, …</div>
-    </div>
-
-    <div class="doodle star s1" style="left:19%;top:19%">✦</div>
-    <div class="doodle star s2" style="right:19%;top:37%">✧</div>
-    <div class="doodle star s3" style="left:28%;bottom:17%">✦</div>
-
-    <div class="hero-inner">
-      <div class="hero-kicker">📒 打開你的數學冒險筆記</div>
-      <h1>
-        <span class="small">WELCOME TO</span>
-        趣遊數學
-      </h1>
-      <p class="hero-sub">
-        數學不只是算答案，<br>
-        更是一場充滿驚喜的探索！
-      </p>
-      <a href="#tasks" class="cta">🚀 開始數學冒險</a>
-    </div>
-  </section>
-
-  <!-- TASKS -->
-  <section id="tasks">
-    <div class="section-title">
-      <span class="mini">TODAY'S MISSION</span>
-      <h2>🎒 今日數學任務</h2>
-      <p>選一個你最想挑戰的任務吧！</p>
-    </div>
-
-    <div class="tasks">
-      <article class="card">
-        <div class="card-icon">🔢</div>
-        <h3>數字小偵探</h3>
-        <p>數字裡藏著什麼秘密？尋找規律、破解線索，成為數字偵探！</p>
-        <span class="tag">規律 × 邏輯</span>
-      </article>
-
-      <article class="card">
-        <div class="card-icon">📐</div>
-        <h3>圖形冒險家</h3>
-        <p>拿起尺和圓規，探索角度、面積與圖形之間有趣的關係。</p>
-        <span class="tag">幾何 × 空間</span>
-      </article>
-
-      <article class="card">
-        <div class="card-icon">🧩</div>
-        <h3>數學解謎王</h3>
-        <p>動動腦、找線索、破關卡！每一道題都是一個等待破解的謎題。</p>
-        <span class="tag">推理 × 挑戰</span>
-      </article>
-    </div>
-  </section>
-
-  <!-- MAP -->
-  <section id="map">
-    <div class="section-title">
-      <span class="mini">ADVENTURE MAP</span>
-      <h2>🗺️ 數學冒險地圖</h2>
-      <p>選擇一個地方，開始你的數學旅程！</p>
-    </div>
-
-    <div class="map-wrap">
-      <div class="map-path"></div>
-
-      <div class="place p1" data-message="🔢 歡迎來到數字村！今天要尋找神秘的數字規律。">
-        <div class="bubble">🏠</div>
-        <h3>數字村</h3>
-        <p>規律正在等你發現</p>
-      </div>
-
-      <div class="place p2" data-message="📐 歡迎來到幾何島！拿起你的尺，探索圖形的秘密吧！">
-        <div class="bubble">🏝️</div>
-        <h3>幾何島</h3>
-        <p>形狀也會說故事</p>
-      </div>
-
-      <div class="place p3" data-message="📈 函數城有新任務！準備好讓 x 和 y 一起冒險了嗎？">
-        <div class="bubble">🏰</div>
-        <h3>函數城</h3>
-        <p>x 與 y 的奇妙世界</p>
-      </div>
-
-      <div class="map-sign">📌 你今天想去哪裡？</div>
-    </div>
-  </section>
-
-  <!-- LIFE MATH -->
-  <section id="life">
-    <div class="section-title">
-      <span class="mini">MATH IN LIFE</span>
-      <h2>💡 數學就在生活裡</h2>
-      <p>原來我們每天都在偷偷使用數學！</p>
-    </div>
-
-    <div class="life">
-      <div class="notebook">
-        <h3>✍️ 數學觀察日記</h3>
-        <p>
-          「今天，我發現數學比想像中更有趣。」<br>
-          吃披薩時會用到分數，買東西時會計算折扣，
-          打籃球時會觀察角度，搭公車時會估算時間……
-          <br><br>
-          數學其實一直都在我們身邊。
-          <strong>只要開始觀察，就會發現好多有趣的數學！</strong>
-        </p>
-      </div>
-
-      <div class="examples">
-        <div class="example">
-          <div class="emoji">🍕</div>
-          <h4>分披薩</h4>
-          <p>分數、比例與圓形，通通出現了！</p>
+<!-- 大廳選組介面 -->
+<div id="lobby-overlay">
+    <div class="lobby-box">
+        <div class="lobby-left">
+            <h1 class="lobby-title">因陀羅網影響力實驗室</h1>
+            <ul class="lobby-rules">
+                <li>本遊戲由<b>兩台平板連線協作</b>，體驗人際互動的蝴蝶效應。</li>
+                <li>請與同桌夥伴商量，<b>選擇相同的「組別編號」</b>進入。</li>
+                <li>一人擔任<b>主角</b>（點選真實心聲），另一人擔任<b>預測者</b>（猜測對方反應）。</li>
+                <li>雙方盲選後，<b>兩道影響力光束將在網絡上對撞！</b></li>
+            </ul>
         </div>
-        <div class="example">
-          <div class="emoji">🛒</div>
-          <h4>買東西</h4>
-          <p>折扣、百分比與心算大挑戰。</p>
+        <div class="lobby-right">
+            <div class="input-group">
+                <label>📌 選擇配對組別 (全班 15 組)</label>
+                <select id="group-select">
+                    <!-- 1~15 組動態生成 -->
+                </select>
+            </div>
+            <div class="input-group">
+                <label>👤 你的姓名 / 座號</label>
+                <input type="text" id="player-name-input" placeholder="例如：7號 小明" maxlength="8">
+            </div>
+            <button class="btn-start" id="btn-enter-lobby">連線進入實驗室 ➔</button>
+            <button class="btn-reset-group" id="btn-force-reset">⚠️ 清除本組連線狀態 (卡關時點擊)</button>
         </div>
-        <div class="example">
-          <div class="emoji">🏀</div>
-          <h4>投籃</h4>
-          <p>角度、距離與拋物線的數學。</p>
-        </div>
-        <div class="example">
-          <div class="emoji">🚌</div>
-          <h4>搭公車</h4>
-          <p>時間、速度與路程就在眼前。</p>
-        </div>
-      </div>
     </div>
-  </section>
+</div>
 
-  <!-- END -->
-  <section class="end">
-    <div class="big-star">⭐</div>
-    <h2>準備好玩數學了嗎？</h2>
-    <p>不要害怕數學，先玩玩看，再慢慢發現它的秘密！</p>
-    <a href="#tasks" class="cta">🎒 再玩一次</a>
-  </section>
+<!-- 等待隊友加入 -->
+<div id="waiting-overlay">
+    <div class="spinner"></div>
+    <h2 style="color:#fbbf24; margin-bottom:8px;" id="waiting-title">已進入 第 01 組</h2>
+    <p style="color:#94a3b8; font-size:16px;">等待同桌隊友加入中... 請確認對方是否選同組</p>
+</div>
 
-</main>
+<!-- 主遊戲介面 -->
+<div id="app-container">
+    <div id="left-stage">
+        <div class="stage-header">
+            <div>
+                <h1 class="title">因陀羅網影響力實驗室</h1>
+                <span style="font-size: 12px; color: #94a3b8;" id="room-label">第 01 組 連線中</span>
+            </div>
+            <div class="hud-stats">
+                <div class="badge badge-round">第 <span id="stat-round">1</span>/8 題</div>
+                <div class="badge badge-match">默契值: <span id="stat-matches">0</span></div>
+            </div>
+        </div>
+        
+        <canvas id="network-canvas"></canvas>
+        <div class="stage-message" id="stage-msg">👉 兩台平板連線成功，請進行盲選！</div>
+    </div>
 
-<footer>
-  ✏️ 趣遊數學 · 用好奇心，打開數學的另一扇門
-</footer>
+    <div id="right-panel">
+        <div class="panel-box" id="gameplay-box">
+            <div id="protagonist-banner" class="protagonist-banner banner-me-protagonist">
+                載入中...
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="q-category" id="q-category">維度標籤</div>
+                <div class="partner-status-tag" id="partner-status">隊友思考中...</div>
+            </div>
+            <div class="question-text" id="q-text">情境載入中...</div>
 
-<div class="toast" id="toast"></div>
+            <!-- 本機按鈕 -->
+            <div class="choice-container" id="choice-buttons"></div>
 
-<script>
-const toast = document.getElementById("toast");
-let toastTimer;
+            <div id="reveal-box">
+                <div class="collision-title" id="reveal-title">💥 對撞完成！</div>
+                <div class="collision-desc" id="reveal-desc">分析說明文字...</div>
+                <button class="btn-next" id="btn-next-round">進入下一回合 ➔</button>
+            </div>
+        </div>
 
-document.querySelectorAll(".place").forEach(place => {
-  place.addEventListener("click", () => {
-    toast.textContent = place.dataset.message;
-    toast.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
-  });
-});
+        <div class="panel-box" id="diagnosis-box">
+            <div class="diag-title" id="diag-headline">🏆 診斷報告</div>
+            <div class="diag-subtitle" id="diag-players">雙人專屬報告</div>
+            <div class="diag-card">
+                <div class="diag-score">
+                    <span>默契指數：<b style="color:#fbbf24" id="diag-match-score">0/8</b></span>
+                    <span>網絡祥和度：<b style="color:#38bdf8" id="diag-harmony-score">0%</b></span>
+                </div>
+                <div id="diag-feedback-text">評語載入中...</div>
+            </div>
+            <button class="btn-next" id="btn-exit-game">結束並返回大廳</button>
+        </div>
+    </div>
+</div>
 
-// 讓按鈕點擊時有一點手繪感的回饋
-document.querySelectorAll(".cta").forEach(btn => {
-  btn.addEventListener("click", () => {
-    btn.animate(
-      [
-        { transform:"scale(1)" },
-        { transform:"scale(.95) rotate(-2deg)" },
-        { transform:"scale(1) rotate(0deg)" }
-      ],
-      { duration:260, easing:"ease-out" }
-    );
-  });
-});
+<!-- 導入 Firebase 模組 (CDN) -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // ==========================================
+    // ⚠️ 老師請在此處貼上您的 Firebase Config
+    // ==========================================
+    const firebaseConfig = {
+  apiKey: "AIzaSyDE6XvAn3WFb6io_eyh93CLtHfPnzyScQk",
+  authDomain: "indra-net-class.firebaseapp.com",
+  databaseURL: "https://indra-net-class-default-rtdb.firebaseio.com",
+  projectId: "indra-net-class",
+  storageBucket: "indra-net-class.firebasestorage.app",
+  messagingSenderId: "348393570795",
+  appId: "1:348393570795:web:b90430cc8069756377d9ae"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 20 道專為國中生活情境設計的 SEL 題庫
+    const rawQuestions = [
+        { category: "分組與合作困境", text: "理化課宣布自由分組，小圈圈迅速找好隊友，你跟另外兩位平時不講話的同學落單了。你會：", red: "當場不爽開酸：「分組根本幼稚，這班級爛透了！」", gray: "默默趴在桌上裝睡，等老師隨便把你塞進某組。", gold: "主動走向那兩位同學：「我們都還沒滿，要不要直接湊一組試試？」" },
+        { category: "分組與合作困境", text: "分組報告明天要交，同組強勢的朋友負責做簡報卻都在打手遊，還叫你幫他做。你會：", red: "在大群組截圖公審：「不想做就滾，不要當寄生蟲！」", gray: "委屈吞下去，邊哭邊熬夜幫他做完，假裝是他做的。", gold: "私下明確告知底線：「各做各的，如果你不補齊，我會誠實跟老師回報分工。」" },
+        { category: "分組與合作困境", text: "露營野炊要分組，平時最好的死黨跑來找你同組，但他習慣很差且從不幫忙。你會：", red: "當眾翻白眼拒絕：「跟你同組一定墊底，我才不要！」", gray: "不敢拒絕而勉強答應，結果整趟活動邊做邊擺臭臉冷戰。", gold: "私下坦白約定：「可以同組，但一定要分工明確，你能答應我們再一起！」" },
+        { category: "手機與網路使用", text: "手遊打排位賽進入最後勝負關鍵一分鐘，媽媽突然推門大罵要沒收手機。你會：", red: "用力推開媽媽大吼：「妳煩不煩啊！差這一分鐘會死嗎！」", gray: "氣憤把手機砸在床上，晚餐絕食不吃，鎖在房裡蒙頭大睡。", gold: "角色停在安全區快速說：「媽對不起！再 60 秒打完我立刻關機吃飯，等我一下！」" },
+        { category: "手機與網路使用", text: "滑 IG 發現班上幾位常一起打球的同學私下聚會發合照，完全沒有找你。你會：", red: "發黑底白字限動狂酸：「表面一套背後一套，虛偽的人不要噁心我。」", gray: "默默退追他們，隔天在班上把他們當空氣，假裝自己根本不在意。", gold: "放下手機去跑步，提醒自己「別人有交友自由，這不代表我沒價值」。" },
+        { category: "手機與網路使用", text: "考前一晚答應爸媽早點睡，卻偷滑短影音到半夜一點被爸爸查房當場抓到。你會：", red: "硬拗說謊：「我只是看時間！你們每天懷疑我，根本把我當犯人！」", gray: "低頭面無表情一聲不吭，隨便爸爸怎麼罵都擺出死豬不怕開水燙的態度。", gold: "主動交出手機認錯：「爸對不起，我確實沒自制力，手機先給你保管。」" },
+        { category: "手機與網路使用", text: "連線打遊戲你不小心出現重大失誤滅團，同學開麥狂嘴你：「到底會不會玩？跟白痴一樣！」你會：", red: "當場開麥三字經罵回去，甚至直接送頭掛網擺爛。", gray: "默默退出語音，整晚悶悶不樂，自卑覺得自己什麼都做不好。", gold: "冷靜開麥：「那波我失誤我認，但好好討論戰術就好，不用人身攻擊。」" },
+        { category: "學業與升學困境", text: "每天放學苦讀理化到半夜，考卷發下來只有 52 分，隔壁上課睡覺的考了 85 分。你會：", red: "撕爛考卷大吼：「努力根本是笑話，讀書沒用，反正我就是笨！」", gray: "把考卷塞抽屜，從此上課徹底放空畫畫，放棄這科。", gold: "難過哭一場後，帶著考卷找老師：「老師，我花很多時間但抓不到盲點，能幫我看看嗎？」" },
+        { category: "學業與升學困境", text: "明天作業很多完全寫不完，同學在大群組發出「整份數學考卷高清解答照」。你會：", red: "全部抄完，還順手轉發炫耀自己弄到了現成解答。", gray: "抄幾題、空幾題假裝自己有算，心存僥倖希望老師改不仔細。", gold: "堅持只寫自己會的部分，隔天誠實跟老師說明進度並利用放學補齊。" },
+        { category: "學業與升學困境", text: "課堂恍神被老師點名站起來念課文，你不知道念到哪裡，台下傳來零星竊笑。你會：", red: "覺得丟臉，惱羞成怒瞪向同學：「笑屁啊！你們很厲害是不是？」", gray: "死盯著桌子不發一語，直到老師生氣罰站，整節課僵持住。", gold: "大方笑一下承認：「報告老師我剛恍神了，請問念到哪一段？我馬上跟上。」" },
+        { category: "學業與升學困境", text: "家庭聚餐親戚公開當眾比較成績：「某某考得比你差，你要引以為戒。」爸媽臉色超難看。你會：", red: "當場摔筷子罵親戚：「你們真的很沒水準！吃頓飯也要比，討厭你們！」", gray: "低頭扒飯一句不吭，心裡充滿屈辱，暗自發誓以後再也不出席聚會。", gold: "微笑大度回應：「表哥確實厲害！不過我這次社會科進步了十分，我也會繼續加油。」" },
+        { category: "家長管教與衝突", text: "回到房間看見媽媽正坐在書桌前翻看你鎖在抽屜的私密日記本。你會：", red: "衝過去把日記搶過來撕爛：「妳是小偷嗎！侵犯人權！我恨死妳了！」", gray: "奪門而出在街上遊蕩到半夜，從此對家人徹底關閉心門。", gold: "深呼吸說：「媽請妳放回桌上。未經同意看日記讓我很受傷，我們需要好好談談隱私。」" },
+        { category: "家長管教與衝突", text: "好友生日全班約聚餐，爸爸一口回絕：「國三都要會考了還整天想玩！不准去，在家刷題。」你會：", red: "大哭踢門：「你們只在乎成績！根本把我當考試機器，根本不愛我！」", gray: "表面說好，當天偷偷翻牆溜出去，一路提心吊膽祈禱別穿幫。", gold: "拿讀書計畫跟爸爸協商：「我週六先刷完兩本題本，週日讓我去兩小時，三點準時回家可以嗎？」" },
+        { category: "家長管教與衝突", text: "好不容易存錢買了畫具或跳舞裝備，媽媽冷諷：「搞這些會考又不會加分，浪費錢又浪費時間。」你會：", red: "把東西摔地上大吼：「妳懂什麼！妳眼裡只有分數，庸俗透頂！」", gray: "默默把裝備收起來扔掉，從此放棄熱愛，心態變得極度厭世。", gold: "認真看著媽媽說：「我知道妳擔心課業，但畫畫是我的壓力出口，我會顧好底線，也請妳尊重我。」" },
+        { category: "家長管教與衝突", text: "爸爸在公司被老闆罵一肚子火，回家看到你鞋子沒擺正便破口大罵你長大沒出息。你會：", red: "大聲頂撞：「在外面受氣回家耍什麼威風？有種去罵你主管啊！」", gray: "嚇得全身發抖默默哭，真的以為自己是拖累全家的累贅。", gold: "意識到這是爸爸轉嫁的情緒，默默排好鞋子，倒杯水給他：「爸辛苦了，先喝口水吧。」" },
+        { category: "同儕人際與校園生活", text: "好死黨最近跟班上最常嘲笑你的死對頭走得很近，下課還一起去福利社，冷落了你。你會：", red: "衝過去質問死黨：「你跟他好是什麼意思？選他還是選我？叛徒！」", gray: "在一旁生悶氣，把這段友情判死刑，覺得世界上沒有人值得信任。", gold: "找時機坦率說出感受：「看你們走很近我有點吃醋跟難受，因為他以前笑過我，希望能聽聽我的感受。」" },
+        { category: "同儕人際與校園生活", text: "你暗戀別人的秘密被好友不小心大嘴巴講出去，走廊大家都在起鬨嘲笑。好友來道歉。你會：", red: "在走廊大吼他是大嘴巴，並把他的八卦也大聲廣播讓全校知道。", gray: "痛哭逃回教室用外套包住頭，恨不得找地洞鑽進去，從此封閉自己。", gold: "嚴肅告訴他：「這對我傷害很大，現在請你跟我一起去澄清是開玩笑的謠言，把傷害降到最低。」" },
+        { category: "同儕人際與校園生活", text: "當風紀股長被老師要求記名，後排常打架的同學威脅你：「敢記試試看，放學揍你。」你會：", red: "當場大喊老師告狀：「老師！他們威脅要揍我，把他們全抓去學務處！」", gray: "嚇到放下筆裝沒看見，任憑全班午休結束被老師罰站，害全班被罵。", gold: "當下不硬碰硬激化衝突，下課私下向導師反映安全顧慮，請老師以巡堂名義介入。" },
+        { category: "同儕人際與校園生活", text: "體育課排球接球不靈活，幾位同學在場邊模仿你的動作起鬨大笑。你會：", red: "把排球往嘲笑的人臉上用力砸過去，大罵粗話。", gray: "強忍淚水低頭躲到健康中心，以後體育課都裝病不敢打球。", gold: "停下動作直視帶頭者，清楚大聲說：「開玩笑要大家都覺得好笑才叫玩笑。請你們停止。」" },
+        { category: "同儕人際與校園生活", text: "大隊接力本來第一名，你在最後交接棒失誤掉棒變成最後一名，全班氣氛一片死寂。你會：", red: "先發制人甩鍋怪隊友：「是他傳得太爛我才沒接好！根本不是我的問題！」", gray: "覺得自己是全班罪人，收拾書包直接翹課離開學校不敢面對。", gold: "走到全班面前鞠躬承認：「對不起大家，是我關鍵失誤掉棒，浪費了大家的努力，真的很抱歉。」" }
+    ];
+
+    // 全域連線變數
+    let currentGroupId = "group_01";
+    let myRole = null; // 'P1' 或 'P2'
+    let myName = "";
+    let roomRef = null;
+    let localSelectedChoice = null;
+
+    const TOTAL_ROUNDS = 8;
+    const canvas = document.getElementById('network-canvas');
+    const ctx = canvas.getContext('2d');
+    let nodes = [], edges = [], particles = [];
+
+    const COLOR_RED = '#f43f5e';
+    const COLOR_GRAY = '#94a3b8';
+    const COLOR_GOLD = '#fbbf24';
+    const COLOR_PURPLE = '#c084fc';
+
+    // 1. 初始化大廳 15 組選單
+    const groupSelect = document.getElementById('group-select');
+    for (let i = 1; i <= 15; i++) {
+        let opt = document.createElement('option');
+        let val = `group_${i < 10 ? '0' + i : i}`;
+        opt.value = val;
+        opt.innerText = `第 ${i < 10 ? '0' + i : i} 組 (桌號 ${i})`;
+        groupSelect.appendChild(opt);
+    }
+
+    // 2. 登入連線邏輯
+    document.getElementById('btn-enter-lobby').addEventListener('click', async () => {
+        const nameInput = document.getElementById('player-name-input').value.trim();
+        if (!nameInput) {
+            alert("請輸入您的姓名或座號！");
+            return;
+        }
+        myName = nameInput;
+        currentGroupId = groupSelect.value;
+        roomRef = ref(db, `indra_rooms/${currentGroupId}`);
+
+        // 讀取該組當前狀態
+        const snap = await get(roomRef);
+        const data = snap.val();
+
+        if (!data || !data.p1) {
+            // 我是第一位進入者 -> P1
+            myRole = 'P1';
+            await set(roomRef, {
+                p1: { name: myName, choice: null, ready: false },
+                p2: null,
+                round: 1,
+                status: "waiting",
+                matchCount: 0,
+                history: []
+            });
+            showWaitingScreen();
+        } else if (!data.p2) {
+            // 我是第二位進入者 -> P2
+            myRole = 'P2';
+            await update(roomRef, {
+                p2: { name: myName, choice: null, ready: false },
+                status: "playing"
+            });
+        } else {
+            // 已經有兩個人
+            alert("該組別已有 2 位同學連線中！請確認是否選錯組別。");
+            return;
+        }
+
+        document.getElementById('lobby-overlay').style.display = 'none';
+        document.getElementById('room-label').innerText = `${groupSelect.options[groupSelect.selectedIndex].text} (${myRole === 'P1' ? '藍方' : '粉方'})`;
+        
+        initCanvasNetwork();
+        listenToRoom();
+    });
+
+    // 強制重置按鈕 (防卡關)
+    document.getElementById('btn-force-reset').addEventListener('click', async () => {
+        const gid = groupSelect.value;
+        if (confirm(`確定要強制清除「${gid}」的連線狀態嗎？這會讓該組重新回到等待連線。`)) {
+            await set(ref(db, `indra_rooms/${gid}`), null);
+            alert("已清除！現在可以重新進入。");
+        }
+    });
+
+    function showWaitingScreen() {
+        document.getElementById('waiting-overlay').style.display = 'flex';
+        document.getElementById('waiting-title').innerText = `已進入 ${groupSelect.options[groupSelect.selectedIndex].text}`;
+    }
+
+    // 3. 監聽 Firebase 房間即時變化 (核心同步)
+    function listenToRoom() {
+        onValue(roomRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            // 隊友加入，解除等待畫面
+            if (data.status !== 'waiting') {
+                document.getElementById('waiting-overlay').style.display = 'none';
+            }
+
+            // 同步 HUD
+            document.getElementById('stat-round').innerText = data.round;
+            document.getElementById('stat-matches').innerText = data.matchCount;
+
+            // 雙方皆已就緒 -> 自動觸發 Reveal (由 P1 統一廣播避免競爭)
+            if (data.p1?.ready && data.p2?.ready && data.status === 'playing') {
+                if (myRole === 'P1') {
+                    update(roomRef, { status: 'reveal' });
+                }
+            }
+
+            // 狀態分流處理
+            if (data.status === 'playing') {
+                handlePlayingState(data);
+            } else if (data.status === 'reveal') {
+                handleRevealState(data);
+            } else if (data.status === 'finished') {
+                handleFinishedState(data);
+            }
+        });
+    }
+
+    // 回合題目同步 (依據 round 數決定)
+    function handlePlayingState(data) {
+        document.getElementById('reveal-box').style.display = 'none';
+        
+        const round = data.round;
+        const currentQ = rawQuestions[(round - 1) % rawQuestions.length];
+        
+        // 奇數局 P1 主角、偶數局 P2 主角
+        const isP1Protagonist = (round % 2 === 1);
+        const amIProtagonist = (myRole === 'P1' && isP1Protagonist) || (myRole === 'P2' && !isP1Protagonist);
+
+        const banner = document.getElementById('protagonist-banner');
+        const p1Name = data.p1?.name || "玩家 A";
+        const p2Name = data.p2?.name || "玩家 B";
+        const proName = isP1Protagonist ? p1Name : p2Name;
+
+        if (amIProtagonist) {
+            banner.className = "protagonist-banner banner-me-protagonist";
+            banner.innerHTML = `🎯 輪到你了！你是本題主角：【${proName}】<br><span style="font-size:14px; font-weight:normal;">請選擇你現實中「真實會怎麼做」</span>`;
+        } else {
+            banner.className = "protagonist-banner banner-me-predictor";
+            banner.innerHTML = `🔮 默契考驗！本題主角是：【${proName}】<br><span style="font-size:14px; font-weight:normal;">請猜猜「${proName}」在現實會選哪一項？</span>`;
+        }
+
+        document.getElementById('q-category').innerText = currentQ.category;
+        document.getElementById('q-text').innerText = currentQ.text;
+
+        // 檢查隊友是否已鎖定
+        const partnerRole = myRole === 'P1' ? 'p2' : 'p1';
+        const partnerReady = data[partnerRole]?.ready;
+        const tag = document.getElementById('partner-status');
+        if (partnerReady) {
+            tag.innerText = "隊友已盲選鎖定！";
+            tag.className = "partner-status-tag ready";
+        } else {
+            tag.innerText = "隊友思考中...";
+            tag.className = "partner-status-tag";
+        }
+
+        // 渲染按鈕 (若本機尚未選擇)
+        const myData = data[myRole.toLowerCase()];
+        if (!myData?.ready) {
+            localSelectedChoice = null;
+            renderChoiceButtons(currentQ, amIProtagonist, proName);
+            document.getElementById('stage-msg').innerText = "👉 請在右側點擊你的選項進行盲鎖！";
+        }
+    }
+
+    // 渲染 3 個選項按鈕
+    function renderChoiceButtons(q, isProtagonist, proName) {
+        const container = document.getElementById('choice-buttons');
+        container.innerHTML = '';
+
+        const opts = [
+            { type: 'red', text: q.red },
+            { type: 'gray', text: q.gray },
+            { type: 'gold', text: q.gold }
+        ];
+
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-choice';
+            btn.innerText = opt.text;
+            btn.onclick = () => submitMyChoice(opt.type, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    // 提交盲選到 Firebase
+    async function submitMyChoice(type, btn) {
+        localSelectedChoice = type;
+        const container = document.getElementById('choice-buttons');
+        const allBtns = container.querySelectorAll('.btn-choice');
+        allBtns.forEach(b => {
+            b.disabled = true;
+            if (b === btn) {
+                b.classList.add('selected-locked');
+                b.innerText = "🔒 已盲選鎖定 (等待隊友完成)";
+            }
+        });
+
+        const myPath = myRole === 'P1' ? 'p1' : 'p2';
+        await update(ref(db, `indra_rooms/${currentGroupId}/${myPath}`), {
+            choice: type,
+            ready: true
+        });
+
+        document.getElementById('stage-msg').innerText = "🔒 你已鎖定心聲！等待隊友完成對撞...";
+    }
+
+    // 雙方開牌與光束對撞動畫
+    function handleRevealState(data) {
+        const p1Choice = data.p1.choice;
+        const p2Choice = data.p2.choice;
+        const round = data.round;
+        const isP1Protagonist = (round % 2 === 1);
+        const realChoice = isP1Protagonist ? p1Choice : p2Choice;
+        const guessChoice = isP1Protagonist ? p2Choice : p1Choice;
+        const isMatch = (realChoice === guessChoice);
+
+        const p1Name = data.p1.name;
+        const p2Name = data.p2.name;
+        const proName = isP1Protagonist ? p1Name : p2Name;
+        const preName = isP1Protagonist ? p2Name : p1Name;
+
+        // 觸發畫布光束對撞特效
+        const activeIdx = (round * 3) % nodes.length;
+        spawnCollisionParticles(nodes[activeIdx].x, nodes[activeIdx].y, realChoice, guessChoice, isMatch);
+
+        let title = "", desc = "";
+        if (isMatch) {
+            if (realChoice === 'gold') {
+                title = "✨ 默契真理智！雙金能量共振";
+                desc = `${preName} 完全相信 ${proName} 能用同理心解決問題！真誠與默契激發了巨大的金色連鎖！`;
+                nodes[activeIdx].color = COLOR_GOLD;
+                shootLaserBeams(activeIdx, COLOR_GOLD, 2);
+            } else if (realChoice === 'red') {
+                title = "🟣 默契真性情！紫金防護罩啟動";
+                desc = `「我就知道你想開罵！」坦誠承認情緒被 ${preName} 完美接納，怒氣化作深紫色的防護盾！`;
+                nodes[activeIdx].color = COLOR_PURPLE;
+                nodes[activeIdx].isShielded = true;
+            } else {
+                title = "🔘 默契沉思！深藍水波平息衝突";
+                desc = "兩人都認為當下冷靜裝死才是最佳避風頭策略。成功止血，阻斷了連鎖惡化。";
+                nodes[activeIdx].color = COLOR_GRAY;
+            }
+        } else {
+            if ((realChoice === 'gold' && guessChoice === 'red') || (realChoice === 'red' && guessChoice === 'gold')) {
+                title = "⚡ 紅金撕裂！戳破假面或誤解";
+                desc = `期待與真實心聲猛烈衝突！光束在連線上湮滅，節點淪為冰冷的死寂灰霧。${proName} 與 ${preName} 想得完全不一樣！`;
+                nodes[activeIdx].color = COLOR_GRAY;
+            } else {
+                title = "🌫️ 思維未對焦！情緒漣漪擾動";
+                desc = `${preName} 沒猜中反應。${proName} 展現的真實面貌讓他感到意外，激起了疑惑的波紋。`;
+                nodes[activeIdx].color = (realChoice === 'red') ? COLOR_RED : COLOR_GRAY;
+            }
+        }
+
+        document.getElementById('reveal-title').innerText = title;
+        document.getElementById('reveal-desc').innerText = desc;
+        document.getElementById('reveal-box').style.display = 'block';
+        document.getElementById('stage-msg').innerText = "💥 光束對撞完成！請觀看對撞結果與網絡變化。";
+    }
+
+    // 點擊下一回合
+    document.getElementById('btn-next-round').addEventListener('click', async () => {
+        const snap = await get(roomRef);
+        const data = snap.val();
+        if (data.status !== 'reveal') return;
+
+        const round = data.round;
+        const isP1Protagonist = (round % 2 === 1);
+        const realChoice = isP1Protagonist ? data.p1.choice : data.p2.choice;
+        const guessChoice = isP1Protagonist ? data.p2.choice : data.p1.choice;
+        const isMatch = (realChoice === guessChoice);
+
+        let newMatchCount = data.matchCount + (isMatch ? 1 : 0);
+        let newHistory = data.history || [];
+        newHistory.push(realChoice);
+
+        if (round >= TOTAL_ROUNDS) {
+            await update(roomRef, {
+                status: 'finished',
+                matchCount: newMatchCount,
+                history: newHistory
+            });
+        } else {
+            await update(roomRef, {
+                round: round + 1,
+                status: 'playing',
+                matchCount: newMatchCount,
+                history: newHistory,
+                "p1/ready": false,
+                "p1/choice": null,
+                "p2/ready": false,
+                "p2/choice": null
+            });
+        }
+    });
+
+    // 8 回合結束：生成診斷書
+    function handleFinishedState(data) {
+        document.getElementById('gameplay-box').style.display = 'none';
+        document.getElementById('diagnosis-box').style.display = 'block';
+
+        const p1Name = data.p1.name;
+        const p2Name = data.p2.name;
+        const matchCount = data.matchCount;
+        const history = data.history || [];
+
+        const goldCount = nodes.filter(n => n.color === COLOR_GOLD).length;
+        const purpleCount = nodes.filter(n => n.color === COLOR_PURPLE).length;
+        const harmonyRate = Math.round(((goldCount + purpleCount) / nodes.length) * 100);
+
+        document.getElementById('diag-players').innerText = `${p1Name} 與 ${p2Name} 的專屬報告`;
+        document.getElementById('diag-match-score').innerText = `${matchCount}/${TOTAL_ROUNDS}`;
+        document.getElementById('diag-harmony-score').innerText = `${harmonyRate}%`;
+
+        let headline = "", feedback = "";
+        if (matchCount >= 5 && harmonyRate >= 50) {
+            headline = "🏆 澄澈因陀羅（知己知彼的真智囊）";
+            feedback = `太神啦！${p1Name} 與 ${p2Name} 深度了解彼此的極限，能在面對問題時互相支持選擇理智！這是一段能看穿脆弱、帶動彼此前進的黃金友誼。`;
+        } else if (matchCount >= 4 && harmonyRate < 50) {
+            headline = "🔥 患難死黨（無話不談的真性情）";
+            feedback = `雖然處理事情火氣不小，但最珍貴的是你們對彼此毫不偽裝！你懂他的暴躁，他懂你的委屈，這是一段經得起風浪的革命情感。`;
+        } else if (matchCount < 4 && history.filter(c => c === 'gold').length >= 4) {
+            headline = "🎭 假面模範生（披著金光的塑膠友誼）";
+            feedback = `有人很常選看似完美的標準答案，但夥伴心裡根本不相信！表面上一團和氣，底下卻充斥防衛。試著在彼此面前卸下防備，展現真實的脆弱吧！`;
+        } else {
+            headline = "🌪️ 思維碰撞隊（互補又驚喜的搭檔）";
+            feedback = `${p1Name} 與 ${p2Name} 的看法截然不同，常常猜不透對方！但正因如此，你們能看見彼此沒注意到的盲點，是彼此生命中最特別的一面鏡子。`;
+        }
+
+        document.getElementById('diag-headline').innerText = headline;
+        document.getElementById('diag-feedback-text').innerText = feedback;
+    }
+
+    document.getElementById('btn-exit-game').addEventListener('click', () => {
+        location.reload();
+    });
+
+    // 4. Canvas 固定拓撲結構 (雙機畫面保證 100% 一致)
+    function initCanvasNetwork() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width || 600;
+        canvas.height = rect.height || 500;
+
+        nodes = []; edges = [];
+        const w = canvas.width, h = canvas.height;
+        const cx = w / 2, cy = h / 2;
+
+        const rings = [
+            { count: 4, r: Math.min(w, h) * 0.18 },
+            { count: 10, r: Math.min(w, h) * 0.42 },
+            { count: 14, r: Math.min(w, h) * 0.72 }
+        ];
+
+        let idCounter = 0;
+        rings.forEach((ring, ringIdx) => {
+            for (let i = 0; i < ring.count; i++) {
+                let angle = (i / ring.count) * Math.PI * 2 + (ringIdx * 0.2);
+                let rx = cx + ring.r * Math.cos(angle);
+                let ry = cy + ring.r * Math.sin(angle);
+                nodes.push({ id: idCounter++, x: rx, y: ry, color: (idCounter % 3 === 0) ? COLOR_RED : COLOR_GRAY, ring: ringIdx, pulse: i, isShielded: false });
+            }
+        });
+
+        let startIdx = 0;
+        rings.forEach(ring => {
+            for (let i = 0; i < ring.count; i++) {
+                edges.push([startIdx + i, startIdx + ((i + 1) % ring.count)]);
+            }
+            startIdx += ring.count;
+        });
+        for (let i = 0; i < 4; i++) { edges.push([i, 4 + i * 2]); edges.push([i, 4 + (i * 2 + 1) % 10]); }
+        for (let i = 0; i < 10; i++) { edges.push([4 + i, 14 + Math.floor(i * 1.4)]); }
+    }
+
+    function spawnCollisionParticles(x, y, c1, c2, isMatch) {
+        const colorMap = { red: COLOR_RED, gray: COLOR_GRAY, gold: COLOR_GOLD };
+        const col1 = colorMap[c1], col2 = colorMap[c2];
+        for (let i = 0; i < 35; i++) {
+            let angle = Math.random() * Math.PI * 2, speed = Math.random() * 5 + 2;
+            particles.push({ x: x, y: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color: (i % 2 === 0) ? col1 : col2, life: 1.0, decay: Math.random() * 0.02 + 0.02 });
+        }
+    }
+
+    function shootLaserBeams(fromIdx, color, count) {
+        const fromNode = nodes[fromIdx];
+        const targets = nodes.filter((n, idx) => idx !== fromIdx && n.color !== COLOR_GOLD).slice(0, count);
+        targets.forEach(t => {
+            t.color = COLOR_GOLD;
+            for (let i = 0; i < 16; i++) {
+                let p = i / 16;
+                particles.push({ x: fromNode.x + (t.x - fromNode.x) * p, y: fromNode.y + (t.y - fromNode.y) * p, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, color: color, life: 1.2, decay: 0.03 });
+            }
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.lineWidth = 2;
+        edges.forEach(e => {
+            const n1 = nodes[e[0]], n2 = nodes[e[1]];
+            if (n1.color === COLOR_GOLD && n2.color === COLOR_GOLD) ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
+            else if (n1.color === COLOR_PURPLE || n2.color === COLOR_PURPLE) ctx.strokeStyle = 'rgba(192, 132, 252, 0.5)';
+            else if (n1.color === COLOR_RED || n2.color === COLOR_RED) ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+            else ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+            ctx.beginPath(); ctx.moveTo(n1.x, n1.y); ctx.lineTo(n2.x, n2.y); ctx.stroke();
+        });
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            ctx.beginPath(); ctx.arc(p.x, p.y, 4 * p.life, 0, Math.PI * 2);
+            ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0;
+        }
+
+        const time = Date.now() / 250;
+        nodes.forEach(node => {
+            let r = 13;
+            if (node.color === COLOR_RED) r += Math.sin(time + node.pulse) * 2.5;
+            if (node.color === COLOR_GOLD) r += Math.sin(time * 0.6 + node.pulse) * 1.5;
+
+            if (node.isShielded) {
+                ctx.beginPath(); ctx.arc(node.x, node.y, r + 8, 0, Math.PI * 2);
+                ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.stroke();
+            }
+
+            ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = node.color; ctx.shadowColor = node.color; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
+        });
+        requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
 </script>
 
 </body>
